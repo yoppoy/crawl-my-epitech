@@ -5,7 +5,6 @@ const verifyLogin = async (page) => {
     if (await page.$x("//p[contains(text(), 'Veuillez vous connecter')]") !== null) {
         let linkHandlers = await page.$x("//a[contains(text(), 'Connexion référent')]");
 
-        console.log("Authenticating...");
         if (linkHandlers.length > 0) {
             await linkHandlers[0].click();
             await page.waitFor(1500);
@@ -54,19 +53,19 @@ const tryRegistration = async (page, module) => {
         const errorTab = await page.$('div[role="alert"] div[class="messages"]');
         if (errorTab) {
             message = await (await errorTab.getProperty('textContent')).jsonValue();
-            console.log(":( -> ", module.title, " - ", message);
+            if (message.includes("already registered"))
+                console.log("! ", module.title, " -> (already registered!) - available : ", module.dateBegin);
+            //console.log(":( -> ", module.title, " - ", message);
         } else {
-            await page.waitFor(1000);
             const successNotification = await page.$('div[class="notification info"] span[class="label"]');
             if (successNotification) {
                 message = await (await successNotification.getProperty('textContent')).jsonValue();
-                console.log("--------");
-                console.log("--- :) -> ", message);
-                console.log("--------");
+                console.log("-> ", module.title, " : ", message);
             }
         }
     } catch (e) {
-        console.log(e.message);
+        if (e.message !== 'No node found for selector: a[class="button register"]')
+            console.log("Warning : ", module.title, " : ", e.message);
     }
 };
 
@@ -75,6 +74,7 @@ const startCrawling = async (page) => {
     const config = require('./config.json');
     let module;
 
+    console.log("Crawling...");
     for (let index = 0; index < modules.length; index++) {
         module = modules[index];
         if (!config || !config.blacklist.includes(module.title))
@@ -85,7 +85,7 @@ const startCrawling = async (page) => {
 (async () => {
     dotenv.config();
     try {
-        const browser = await puppeteer.launch({headless: true});
+        const browser = await puppeteer.launch({headless: false});
         const page = await browser.newPage();
         await page.goto("https://intra.epitech.eu/");
         await verifyLogin(page);
