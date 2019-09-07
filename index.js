@@ -85,7 +85,7 @@ const startCrawling = async (page) => {
 (async () => {
     dotenv.config();
     try {
-        const browser = await puppeteer.launch({headless: false});
+        const browser = await puppeteer.launch({headless: true});
         const page = await browser.newPage();
         await page.goto("https://intra.epitech.eu/");
         await verifyLogin(page);
